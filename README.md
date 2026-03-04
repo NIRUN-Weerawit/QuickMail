@@ -1,3 +1,9 @@
+##Updates
+###Version 2.4
+- Most completed one so far
+- Use Gemini API (Quota: 20 rpd) for summary, scheduled to send summary everyday at 10, 13, 15, 17, 20, 23 O' clock
+- Use Ollama model for categorizing and short summary for important emails
+
 # Required Installations
 
 To replicate this project, the following components must be installed and running locally:
