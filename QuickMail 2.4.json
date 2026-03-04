@@ -1,0 +1,1330 @@
+{
+  "name": "QuickMail 2.4",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "function makeJsonCompatible(text) { \n  return JSON.stringify(text); \n}\nfunction cleanEmail(text) {\n  return text\n    .replace(/&nbsp;/g, \" \")\n    .replace(/&ndash;/g, \"-\")\n    .replace(/&quot;/g, '\"')\n    .replace(/\\r/g, \"\\n\")\n    .replace(/\\n{3,}/g, \"\\n\\n\")\n    .trim();\n}\n\nconst rawText = $input.first().json.text;\nconst subject = $input.first().json.subject;\nconst sender_name = $input.first().json.from.value[0].name;\nconst sender_email = $input.first().json.from.value[0].address\n// const date = $input.first().json.date;\nconst receiver = $input.first().json.headers['delivered-to'];\n\n// No JSON.stringify here\n// const prompt = makePrompt(rawText);\nconst safeText = makeJsonCompatible(rawText);\n// const safePrompt = makeJsonCompatible(prompt);\nconst safeSubject = makeJsonCompatible(subject);\nconst safeSenderName = makeJsonCompatible(sender_name);\nconst safeSenderEmail = makeJsonCompatible(sender_email);\nconst safeReceiver = makeJsonCompatible(receiver)\n// const safeDate = makeJsonCompatible(date);\nreturn [\n  {\n    json: {\n      content: safeText,\n      // prompt: safePrompt,\n      subject: safeSubject,\n      senderEmail: safeSenderEmail,\n      senderName: safeSenderName,\n      receiver: safeReceiver,\n      date: makeJsonCompatible($now),\n      sessionId: makeJsonCompatible($input.first().json.id),\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        64
+      ],
+      "id": "aa095ced-b12a-4a97-853e-3af8037a6d61",
+      "name": "Input manager"
+    },
+    {
+      "parameters": {
+        "jsCode": "// const items = $input.first().json.response\nreturn items.map(item => {\n\n  let result;\n\n  try {\n    result = JSON.parse(item.json.output);\n  } catch {\n    result = {};\n  }\n\n  return {\n    json: {\n      ...item.json,\n      ...result\n    }\n  };\n\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        64
+      ],
+      "id": "aae814d7-0641-436c-ae63-49a0eaa770f8",
+      "name": "Category dealer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aff522c3-63d1-4e69-b772-f6a7ba5eff65",
+              "name": "urgency",
+              "value": "={{ $json.output.urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "6e16a9e6-932c-4d1e-9ec1-a09c80bc8dbd",
+              "name": "action_required",
+              "value": "={{ $json.output.action_required }}",
+              "type": "string"
+            },
+            {
+              "id": "f1c95c06-4238-4a69-a8b3-db34d6a5003c",
+              "name": "category",
+              "value": "={{ $json.output.category }}",
+              "type": "string"
+            },
+            {
+              "id": "8618cb82-3a53-4ed7-8e9e-c2ac770af734",
+              "name": "subject",
+              "value": "={{ $('Input manager').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "cc49d32f-27b1-4fec-9291-26a3ca53f456",
+              "name": "senderEmail",
+              "value": "={{ $('Input manager').item.json.senderEmail }}",
+              "type": "string"
+            },
+            {
+              "id": "b24c553a-c13a-45a2-8bfa-c4f4074df1d8",
+              "name": "senderName",
+              "value": "={{ $('Input manager').item.json.senderName }}",
+              "type": "string"
+            },
+            {
+              "id": "3e3e8733-0e86-4e86-a0e7-0fbf2efcf490",
+              "name": "sessionId",
+              "value": "={{ $('Input manager').item.json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "1fbb65d9-7315-49e6-959b-95497a86815d",
+              "name": "content",
+              "value": "={{ $('Input manager').item.json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "186a9934-34fa-449b-ae18-53d87e93c5b3",
+              "name": "receiver",
+              "value": "={{ $('Input manager').item.json.receiver }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        64
+      ],
+      "id": "70b504ca-ad1f-4703-881a-e1bcae8ec0ed",
+      "name": "Data fields manager"
+    },
+    {
+      "parameters": {
+        "events": [
+          "activate"
+        ]
+      },
+      "type": "n8n-nodes-base.n8nTrigger",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        384
+      ],
+      "id": "bc7464f6-339e-41af-b012-834667a34165",
+      "name": "n8n Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "emailDB_personal",
+        "columns": {
+          "column": [
+            {
+              "name": "subject"
+            },
+            {
+              "name": "senderEmail"
+            },
+            {
+              "name": "senderName"
+            },
+            {
+              "name": "content"
+            },
+            {
+              "name": "urgency"
+            },
+            {
+              "name": "action_required"
+            },
+            {
+              "name": "category"
+            },
+            {
+              "name": "sessionId"
+            },
+            {
+              "name": "receiver"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": false
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -672,
+        528
+      ],
+      "id": "964406a4-e17d-4f2e-a2e4-57a3ad8ef64c",
+      "name": "Create emailDB_personal",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "emailDB_work",
+        "columns": {
+          "column": [
+            {
+              "name": "subject"
+            },
+            {
+              "name": "senderEmail"
+            },
+            {
+              "name": "senderName"
+            },
+            {
+              "name": "content"
+            },
+            {
+              "name": "urgency"
+            },
+            {
+              "name": "action_required"
+            },
+            {
+              "name": "category"
+            },
+            {
+              "name": "sessionId"
+            },
+            {
+              "name": "receiver"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": false
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -672,
+        224
+      ],
+      "id": "0aee2c45-1370-4a49-89c1-f690f41224f4",
+      "name": "Create emailDB_work",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a39b56a1-9715-4e9c-9291-18c410215eb0",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "cd95f9e6-183d-4ca9-b3f7-c8ecc307d741",
+              "name": "urgency",
+              "value": "={{ $json.urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "7fa43d82-dc26-4b03-8ec5-7ddec710a767",
+              "name": "subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "7142e5d7-fa17-429a-9ffb-4796d4cf9fd6",
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        608
+      ],
+      "id": "ee7ec25e-3540-4e96-bf24-36c95944f48d",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const contents = $input.all().map(item => item.json.content);\n\n// for (content in contents) {\n  \n// }\n\nreturn [\n  {\n    json: {\n      chatInput: contents,\n      sessionId: $input.first().json.sessionId\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        608
+      ],
+      "id": "2ff96e47-872f-4e00-b9f7-aa55ad9ce456",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -432,
+        -32
+      ],
+      "id": "5b554028-ac24-4efe-8324-63cf91f3c479",
+      "name": "Personal Gmail ",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -432,
+        160
+      ],
+      "id": "3e43b67b-db66-46a3-a366-312637e3c38a",
+      "name": "Work gmail",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "38d3b17d-c357-4e87-bfe9-31c822ff9dcb",
+              "leftValue": "={{ $json.action_required }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        288
+      ],
+      "id": "4f142c11-3dfd-47de-bb15-7f089fc21372",
+      "name": "Action required"
+    },
+    {
+      "parameters": {
+        "jsCode": "function makeJsonCompatible(text) { \n  return JSON.stringify(text); \n}\n\nfunction makePrompt(text) {\n  return `\nYou are an email analysis assistant.\n\nFrom the email below:\n\n1) Write a concise but complete summary including key details (deadlines, requests, payments, meetings, links, decisions).\n2) Extract any explicit deadline (or None).\n3) Extract all important URLs (or None).\n4) Additional remarks (if any).\n\nEmail Body:\n${text}\n\nReturn information exactly as this list:\n1. **summary** ,\n2. **extracted_deadline**: \"string or None\",\n3. **extracted_links** \n4. **Additional Notes**\n`;\n}\n\nconst rawText = $input.first().json.content;\nconst subject = $input.first().json.subject;\nconst sender_name = $input.first().json.senderName;\nconst sender_email = $input.first().json.senderEmail;\nconst date = $input.first().json.date;\n\n// No JSON.stringify here\nconst prompt = makePrompt(rawText);\nconst safeText = makeJsonCompatible(rawText);\nconst safePrompt = makeJsonCompatible(prompt);\nconst safeSubject = makeJsonCompatible(subject);\nconst safeSenderName = makeJsonCompatible(sender_name);\nconst safeSenderEmail = makeJsonCompatible(sender_email);\nconst safeDate = makeJsonCompatible(date);\nreturn [\n  {\n    json: {\n      prompt: safePrompt,\n      subject: safeSubject,\n      senderEmail: safeSenderEmail,\n      senderName: safeSenderName,\n      date: safeDate,\n      text: safeText,\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        272
+      ],
+      "id": "e2ae90a4-579f-4fa3-8317-b6d18a829b59",
+      "name": "Prompt Generator"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "YOUR_DISCORD_SERVER_ID",
+          "mode": "id"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_DISCORD_CHANNEL_ID",
+          "mode": "id"
+        },
+        "content": "=Title: {{ $('Input manager').item.json.subject }}\nDate: {{ $('Input manager').item.json.date }}\n{{ $('Input manager').item.json.senderName }} : {{ $('Input manager').item.json.senderEmail }}\n\n{{ $json.response }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        272
+      ],
+      "id": "8d0d97bd-8865-4ecb-8c24-11e5ac2ccaf2",
+      "name": "Send Summary",
+      "webhookId": "d42d4888-7f97-4e57-afc1-99c2e21e39cb",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1478306821994319886",
+          "mode": "id"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1478306821994319886",
+          "mode": "id"
+        },
+        "content": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        896,
+        608
+      ],
+      "id": "9b0aadbd-3766-4eb3-99ba-c53faba5f9ce",
+      "name": "Send Overall Summary ",
+      "webhookId": "d42d4888-7f97-4e57-afc1-99c2e21e39cb",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "38d3b17d-c357-4e87-bfe9-31c822ff9dcb",
+              "leftValue": "={{ $json.receiver }}",
+              "rightValue": "ONE_OF_YOUR_EMAIL_USERNAME",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        64
+      ],
+      "id": "44ed7958-796d-42e1-8a57-797bb69e699b",
+      "name": "Classify Mail"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "=emailDB_work",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "urgency",
+              "condition": "ilike",
+              "keyValue": "high"
+            },
+            {
+              "keyName": "urgency",
+              "condition": "ilike",
+              "keyValue": "medium"
+            }
+          ]
+        },
+        "returnAll": true,
+        "orderBy": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -192,
+        720
+      ],
+      "id": "13ab4753-4cb8-4ba6-bddf-ef34ce92833f",
+      "name": "Get rows work"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "emailDB_personal",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "urgency",
+              "condition": "ilike",
+              "keyValue": "high"
+            },
+            {
+              "keyName": "urgency",
+              "condition": "ilike",
+              "keyValue": "medium"
+            },
+            {
+              "condition": "isNotEmpty"
+            }
+          ]
+        },
+        "returnAll": true,
+        "orderBy": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -192,
+        512
+      ],
+      "id": "85e848e9-81c9-4b2a-98a5-2bf0342f8aa1",
+      "name": "Get rows personal"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 13 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 15 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 17 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 20 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 23 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        512
+      ],
+      "id": "8e98ced8-6d8b-417a-9ff3-1ff16201fb3a",
+      "name": "Schedule Trigger Personal"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1088,
+        272
+      ],
+      "id": "7492ba13-2a21-45b6-b8cf-8ae4b902d0d0",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "llama3:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        448
+      ],
+      "id": "e812a120-edbe-4ae4-9cfe-c3c585f0388e",
+      "name": "Ollama Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "model": "llama3:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        0,
+        240
+      ],
+      "id": "41092d47-8545-4b8d-953e-a7a6d9fb5830",
+      "name": "Ollama Model1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.content }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "category",
+              "description": "- work: meetings, projects, internal communication, research, administration - finance: invoices, payments, billing, bank, subscriptions - personal: personal communication, friends, family - promotion: advertisements, marketing, newsletters, sales",
+              "required": true
+            },
+            {
+              "name": "action_required",
+              "type": "boolean",
+              "description": "- yes: the recipient must perform an action (reply, confirm, pay, submit, attend, etc.) - no: no action required",
+              "required": true
+            },
+            {
+              "name": "urgency",
+              "description": "- high: urgent language, short deadline, payment due, legal issue, immediate action required - medium: action required but not urgent - low: informational email, no action needed",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        64
+      ],
+      "id": "d1608a83-412f-4425-9ac6-38165c52909a",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f3023124-4eea-4ffd-a1f3-519342f61002",
+              "name": "output",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        608
+      ],
+      "id": "bf323af8-8528-475c-9e70-67638f049bb8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a personal email assistant.\n\nYou will receive a list of emails collected over a period of time. Your job is to analyze them and help the user quickly understand what matters.\n\nYour tasks:\n\n1. Provide a concise overview of the inbox.\n2. Identify which emails are important and should be read carefully.\n3. Identify which emails require action from the user.\n4. Identify which emails require a reply.\n5. Highlight interesting or informative emails that may be worth reading but are not urgent.\n\nPrioritize clarity and usefulness. The user should be able to understand their inbox in a few seconds.\nThe total length of output must be strictly lower than 2,000 characters.\nGuidelines:\n- Focus only on important information.\n- Ignore signatures and unnecessary text.\n- Group similar emails when possible.\n- If multiple emails relate to the same topic, summarize them together.\n\nReturn your answer in the following format:\n\nINBOX OVERVIEW\nBrief summary of the overall inbox situation.\n\nIMPORTANT EMAILS\nEmails that are important to read carefully.\nFor each email include:\n- subject\n- sender\n- short explanation of why it is important\n\nACTION REQUIRED\nEmails where the user must perform an action (submit something, attend meeting, pay invoice, confirm information, etc.).\n\nREPLY NEEDED\nEmails where the user should reply.\n\nINTERESTING / OPTIONAL READS\nEmails that are informative or interesting but not urgent.\n\nLOW PRIORITY\nEmails that are newsletters, promotions, or routine notifications.",
+              "role": "model"
+            },
+            {
+              "content": "=\"{{ $json.chatInput }}\""
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        608
+      ],
+      "id": "ef92f9c1-678d-4063-bcfb-f19ce9056405",
+      "name": "Message a model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 13 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 15 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 17 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 20 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 23 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        720
+      ],
+      "id": "21588c21-920a-4ed3-850b-d3e119882022",
+      "name": "Schedule Trigger Work"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "emailDB_personal",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sessionId",
+              "condition": "ilike",
+              "keyValue": "={{ $json.sessionId }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "senderEmail",
+              "displayName": "senderEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "senderName",
+              "displayName": "senderName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "action_required",
+              "displayName": "action_required",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "receiver",
+              "displayName": "receiver",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        -48
+      ],
+      "id": "38adce4d-eae5-420d-a483-d6549b6dae4a",
+      "name": "Upsert emailDB_personal"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "emailDB_work",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sessionId",
+              "condition": "ilike",
+              "keyValue": "={{ $json.sessionId }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "senderEmail",
+              "displayName": "senderEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "senderName",
+              "displayName": "senderName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "action_required",
+              "displayName": "action_required",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "receiver",
+              "displayName": "receiver",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        112
+      ],
+      "id": "db8e905d-15f4-4393-b72d-ce88becb11f7",
+      "name": "Upsert emailDB_work"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "emailDB_personal",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "subject",
+              "condition": "isNotEmpty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        432
+      ],
+      "id": "cc3ce2c0-0c12-4afe-ab6c-a0e6120d358e",
+      "name": "Delete all rows personal",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "emailDB_personal",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "subject",
+              "condition": "isNotEmpty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        800
+      ],
+      "id": "b7ed2161-e753-4720-b2c7-7c073b3f3083",
+      "name": "Delete all rows work"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Input manager": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Category dealer": {
+      "main": [
+        [
+          {
+            "node": "Data fields manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data fields manager": {
+      "main": [
+        [
+          {
+            "node": "Classify Mail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Action required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create emailDB_personal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create emailDB_work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create emailDB_personal": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personal Gmail ": {
+      "main": [
+        [
+          {
+            "node": "Input manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Work gmail": {
+      "main": [
+        [
+          {
+            "node": "Input manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action required": {
+      "main": [
+        [
+          {
+            "node": "Prompt Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt Generator": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Mail": {
+      "main": [
+        [
+          {
+            "node": "Upsert emailDB_personal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upsert emailDB_work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Overall Summary ": {
+      "main": [
+        []
+      ]
+    },
+    "Get rows work": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Delete all rows work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows personal": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Delete all rows personal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger Personal": {
+      "main": [
+        [
+          {
+            "node": "Get rows personal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Category dealer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send Overall Summary ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger Work": {
+      "main": [
+        [
+          {
+            "node": "Get rows work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "ac15906b-cd55-43c8-9e82-24310b289bc3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "33d3118021c86740b1a15c617d0d9d55d063df19d7374e00a1b8953c3734f20d"
+  },
+  "id": "JJaXW4GzxZqlC8WH",
+  "tags": []
+}
